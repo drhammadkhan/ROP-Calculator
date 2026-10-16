@@ -276,7 +276,7 @@
             </div>
           </div>
           <div class="timeline-wrap">
-            <div class="tl-title"><span>Days from birth</span><span id="tlSpan"></span></div>
+            <div class="tl-title"><span>Days after birth</span><span id="tlSpan"></span></div>
             <div class="timeline" aria-hidden="true">
               <div class="track"><div class="band" id="band"></div></div>
               <div id="marks" style="position:relative"></div>
@@ -296,7 +296,7 @@
     <details>
       <summary>How is the window calculated?</summary>
       <div>
-        <p>The calculator works out how many days after birth a baby reaches <b>31 weeks</b> or <b>36 weeks</b> postmenstrual age (PMA), compares that with a minimum of <b>28 days</b> of age, then picks the figure that applies to the baby. The window runs for 7 days (start day to start day + 6).</p>
+        <p>The calculator works out how many days after birth a baby reaches <b>31 weeks</b> or <b>36 weeks</b> postmenstrual age (PMA), compares that with <b>28 days after birth</b>, then selects the later or earlier point according to the rules below. Birth is day 0. The window runs for 7 days (start day to start day + 6).</p>
         <table class="rules">
           <tr><th>Baby</th><th>Window starts</th></tr>
           <tr><td>Born at under 32 weeks</td><td>Whichever is later: 31+0 weeks PMA or 28 days of age</td></tr>
@@ -413,8 +413,8 @@
 
     $('sDate').textContent = fmt.format(r.startDate);
     $('eDate').textContent = fmt.format(r.endDate);
-    $('sSub').textContent = 'Day ' + r.startDay + ' of life · PMA ' + ROP.formatPMA(r.gaDays + r.startDay);
-    $('eSub').textContent = 'Day ' + r.endDay + ' of life · PMA ' + ROP.formatPMA(r.gaDays + r.endDay);
+    $('sSub').textContent = r.startDay + (r.startDay === 1 ? ' day' : ' days') + ' after birth · PMA ' + ROP.formatPMA(r.gaDays + r.startDay);
+    $('eSub').textContent = r.endDay + (r.endDay === 1 ? ' day' : ' days') + ' after birth · PMA ' + ROP.formatPMA(r.gaDays + r.endDay);
     $('tlSpan').textContent = 'Days ' + r.startDay + '–' + r.endDay;
 
     // timeline scale: 0 .. at least 70 days, always leaving room after the window
@@ -443,7 +443,7 @@
 
     lastText = 'ROP screening window (' + ga + ', born ' + fmt.format(dob) + '): ' +
       fmt.format(r.startDate) + ' to ' + fmt.format(r.endDate) +
-      ' (days ' + r.startDay + '–' + r.endDay + ' of life). ' + msg[0] + '.';
+      ' (days ' + r.startDay + '–' + r.endDay + ' after birth). ' + msg[0] + '.';
     show('result');
   }
 

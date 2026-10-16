@@ -9,7 +9,7 @@
   var DAY_MS = 86400000;
   var PMA_31_WEEKS = 217; // 31+0 weeks in days
   var PMA_36_WEEKS = 252; // 36+0 weeks in days
-  var MIN_START = 28;     // never screen before 28 days of age
+  var MIN_START = 28;     // comparison point: minimum for GA <32 weeks; cap for GA >=32 weeks
 
   /** Returns { status, message, startDay, endDay, startDate, endDate, gaDays }.
    *  status: 'examine' | 'consider' | 'not-eligible' */
