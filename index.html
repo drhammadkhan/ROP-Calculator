@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ROP Screening Window Calculator</title>
+<meta name="description" content="Calculate the retinopathy of prematurity (ROP) screening window for a preterm baby, based on the RCPCH 2024 UK clinical guideline.">
+<meta name="theme-color" content="#0f766e">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<style>
+  :root {
+    --bg: #f3f7f8;
+    --bg-grad-1: #d9efec;
+    --bg-grad-2: #e4e9fb;
+    --surface: #ffffff;
+    --surface-2: #f6f9fa;
+    --ink: #10242b;
+    --ink-2: #4a6169;
+    --line: #dbe5e8;
+    --brand: #0f766e;
+    --brand-ink: #ffffff;
+    --brand-soft: #d7f0ec;
+    --accent: #4f46e5;
+    --ok-bg: #e3f5ee;   --ok-ink: #0b5a3f;   --ok-line: #b6e2cf;
+    --warn-bg: #fff4de; --warn-ink: #7a4a00; --warn-line: #f2d9a0;
+    --off-bg: #eef1f4;  --off-ink: #3d4b55;  --off-line: #d5dce2;
+    --err: #b42318;
+    --shadow: 0 1px 2px rgba(16,36,43,.05), 0 12px 32px -12px rgba(16,36,43,.18);
+    --radius: 18px;
+  }
+  :root[data-theme="dark"] {
+    --bg: #0c1519; --bg-grad-1: #0f2a2a; --bg-grad-2: #171a3a;
+    --surface: #131f25; --surface-2: #182830; --ink: #e8f1f3; --ink-2: #9bb2ba;
+    --line: #25383f; --brand: #2dd4bf; --brand-ink: #04211e; --brand-soft: #123a38; --accent: #a5b4fc;
+    --ok-bg: #11332a; --ok-ink: #8fe3bf; --ok-line: #1d5442;
+    --warn-bg: #3a2c0e; --warn-ink: #f5d38a; --warn-line: #5b4513;
+    --off-bg: #1c2a31; --off-ink: #b4c4cb; --off-line: #2b3f47;
+    --err: #ff8f84;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.6);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0c1519; --bg-grad-1: #0f2a2a; --bg-grad-2: #171a3a;
+      --surface: #131f25; --surface-2: #182830; --ink: #e8f1f3; --ink-2: #9bb2ba;
+      --line: #25383f; --brand: #2dd4bf; --brand-ink: #04211e; --brand-soft: #123a38; --accent: #a5b4fc;
+      --ok-bg: #11332a; --ok-ink: #8fe3bf; --ok-line: #1d5442;
+      --warn-bg: #3a2c0e; --warn-ink: #f5d38a; --warn-line: #5b4513;
+      --off-bg: #1c2a31; --off-ink: #b4c4cb; --off-line: #2b3f47;
+      --err: #ff8f84;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px -12px rgba(0,0,0,.6);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; color: var(--ink); background: var(--bg);
+    background-image:
+      radial-gradient(60rem 30rem at 10% -10%, var(--bg-grad-1), transparent 60%),
+      radial-gradient(50rem 28rem at 100% 0%, var(--bg-grad-2), transparent 60%);
+    background-repeat: no-repeat;
+    font: 16px/1.55 Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+  }
+  .wrap { max-width: 1040px; margin: 0 auto; padding: 20px 16px 56px; }
+
+  header.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 4px 0 18px; }
+  .brand { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .logo {
+    width: 42px; height: 42px; border-radius: 13px; flex: none;
+    background: linear-gradient(135deg, var(--brand), var(--accent)); display: grid; place-items: center; color: #fff;
+    box-shadow: 0 8px 18px -8px var(--brand);
+  }
+  .brand small { display: block; color: var(--ink-2); font-size: 12.5px; letter-spacing: .04em; text-transform: uppercase; font-weight: 600; }
+  .brand strong { font-size: 15px; }
+  .icon-btn {
+    border: 1px solid var(--line); background: var(--surface); color: var(--ink); width: 40px; height: 40px;
+    border-radius: 12px; cursor: pointer; display: grid; place-items: center; flex: none;
+  }
+  .icon-btn:hover { border-color: var(--brand); }
+
+  h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.1; letter-spacing: -.02em; margin: 6px 0 10px; }
+  .lede { color: var(--ink-2); max-width: 62ch; margin: 0 0 26px; font-size: 17px; }
+
+  .grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 20px; align-items: start; }
+  @media (max-width: 820px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    box-shadow: var(--shadow); padding: 24px;
+  }
+  .card h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-2); margin: 0 0 18px; font-weight: 700; }
+
+  .field { margin-bottom: 18px; }
+  .field:last-of-type { margin-bottom: 0; }
+  label, .label { display: block; font-weight: 600; font-size: 14.5px; margin-bottom: 6px; }
+  .hint { color: var(--ink-2); font-weight: 400; font-size: 13px; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+  select, input[type="number"], input[type="date"] {
+    width: 100%; height: 48px; padding: 0 14px; border-radius: 12px; border: 1.5px solid var(--line);
+    background: var(--surface-2); color: var(--ink); font: inherit; font-size: 16px; appearance: none; -webkit-appearance: none;
+    transition: border-color .15s, box-shadow .15s, background .15s;
+  }
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='9' viewBox='0 0 14 9'%3E%3Cpath d='M1 1.5l6 6 6-6' fill='none' stroke='%237d939b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  input[type="date"] { min-width: 0; }
+  select:focus, input:focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 4px color-mix(in srgb, var(--brand) 22%, transparent); background: var(--surface); }
+  .unit { position: relative; }
+  .unit input { padding-right: 52px; }
+  .unit span { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--ink-2); font-size: 14px; pointer-events: none; }
+  .invalid { border-color: var(--err) !important; }
+  .err { color: var(--err); font-size: 13px; margin-top: 6px; min-height: 0; }
+  .err:empty { display: none; }
+
+  .actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
+  button.btn {
+    font: inherit; font-weight: 600; font-size: 14.5px; height: 44px; padding: 0 18px; border-radius: 12px; cursor: pointer;
+    border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+  }
+  button.btn:hover { border-color: var(--brand); }
+  button.btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
+  button.btn:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
+
+  /* results */
+  .banner { border-radius: 14px; padding: 14px 16px; border: 1px solid; display: flex; gap: 12px; align-items: flex-start; margin-bottom: 20px; }
+  .banner svg { flex: none; margin-top: 2px; }
+  .banner b { display: block; font-size: 15.5px; margin-bottom: 2px; }
+  .banner p { margin: 0; font-size: 14.5px; }
+  .banner.examine { background: var(--ok-bg); color: var(--ok-ink); border-color: var(--ok-line); }
+  .banner.consider { background: var(--warn-bg); color: var(--warn-ink); border-color: var(--warn-line); }
+  .banner.not-eligible { background: var(--off-bg); color: var(--off-ink); border-color: var(--off-line); }
+
+  .empty { text-align: center; padding: 34px 10px 26px; color: var(--ink-2); }
+  .empty .orb { width: 68px; height: 68px; margin: 0 auto 14px; border-radius: 50%; background: var(--brand-soft); display: grid; place-items: center; color: var(--brand); }
+  .empty h3 { margin: 0 0 4px; color: var(--ink); font-size: 18px; }
+  .empty p { margin: 0; }
+
+  .dates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  @media (max-width: 480px) { .dates { grid-template-columns: 1fr; } }
+  .stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .stat .k { font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); font-weight: 700; }
+  .stat .big { font-size: 22px; font-weight: 750; letter-spacing: -.01em; margin: 2px 0; line-height: 1.25; }
+  .stat .sub { font-size: 13.5px; color: var(--ink-2); }
+  .stat.start .big { color: var(--brand); }
+
+  .timeline { margin: 6px 0 4px; }
+  .track { position: relative; height: 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
+  .band { position: absolute; top: -1px; bottom: -1px; border-radius: 999px; background: linear-gradient(90deg, var(--brand), var(--accent)); box-shadow: 0 4px 14px -4px var(--brand); transition: left .35s ease, width .35s ease; min-width: 10px; }
+  .mark { position: absolute; top: 20px; transform: translateX(-50%); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
+  .mark::before { content: ""; position: absolute; left: 50%; top: -9px; height: 6px; width: 1px; background: var(--line); }
+  .mark.first { transform: none; } .mark.first::before { left: 0; }
+  .timeline-wrap { padding-bottom: 38px; }
+  .tl-title { font-size: 13px; color: var(--ink-2); margin-bottom: 8px; display: flex; justify-content: space-between; gap: 8px; }
+
+  .explain { font-size: 14px; color: var(--ink-2); background: var(--surface-2); border-radius: 12px; padding: 12px 14px; margin-top: 4px; }
+  .explain b { color: var(--ink); }
+
+  .copyrow { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+
+  /* info */
+  .info { margin-top: 22px; display: grid; gap: 12px; }
+  details { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 0 18px; }
+  summary { cursor: pointer; font-weight: 650; padding: 15px 0; list-style: none; display: flex; justify-content: space-between; gap: 10px; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; color: var(--brand); font-size: 20px; line-height: 1.2; }
+  details[open] summary::after { content: "–"; }
+  details > div { padding: 0 0 16px; color: var(--ink-2); font-size: 15px; }
+  details p { margin: 0 0 10px; }
+  details ul { margin: 0 0 10px; padding-left: 20px; }
+  table.rules { width: 100%; border-collapse: collapse; font-size: 14px; margin: 6px 0 10px; }
+  table.rules th, table.rules td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  table.rules th { color: var(--ink); font-weight: 650; }
+  a { color: var(--brand); }
+  :root[data-theme="dark"] a { color: var(--brand); }
+
+  .disclaimer { margin-top: 22px; font-size: 13.5px; color: var(--ink-2); border-left: 3px solid var(--warn-line); padding: 4px 0 4px 14px; }
+  footer { margin-top: 26px; font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 18px; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; transition: .25s; pointer-events: none; z-index: 5; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media print {
+    body { background: #fff; color: #000; }
+    .icon-btn, .actions, .copyrow, .info, .toast { display: none !important; }
+    .card { box-shadow: none; }
+    .grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="logo" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>
+      </div>
+      <div><small>Neonatal screening</small><strong>ROP Calculator</strong></div>
+    </div>
+    <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle light / dark theme" title="Toggle theme">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+    </button>
+  </header>
+
+  <h1>ROP screening window calculator</h1>
+  <p class="lede">Enter a baby's gestational age, birthweight and date of birth to find the first retinopathy of prematurity (ROP) screening window, based on the revised 2024 UK clinical guideline.</p>
+
+  <main class="grid">
+    <section class="card" aria-labelledby="inH">
+      <h2 id="inH">Baby's details</h2>
+      <form id="form" novalidate autocomplete="off">
+        <div class="field">
+          <span class="label" id="gaLabel">Gestational age at birth</span>
+          <div class="row" role="group" aria-labelledby="gaLabel">
+            <div>
+              <select id="weeks" aria-label="Gestational age, weeks">
+                <option value="">Weeks</option>
+              </select>
+            </div>
+            <div>
+              <select id="days" aria-label="Gestational age, additional days">
+                <option value="">Days</option>
+              </select>
+            </div>
+          </div>
+          <div class="err" id="gaErr" role="alert"></div>
+        </div>
+
+        <div class="field">
+          <label for="bw">Birthweight <span class="hint">(300–3500 g)</span></label>
+          <div class="unit">
+            <input id="bw" type="number" inputmode="numeric" min="300" max="3500" step="1" placeholder="e.g. 1250">
+            <span>g</span>
+          </div>
+          <div class="err" id="bwErr" role="alert"></div>
+        </div>
+
+        <div class="field">
+          <label for="dob">Date of birth</label>
+          <input id="dob" type="date" min="1900-01-02">
+          <div class="err" id="dobErr" role="alert"></div>
+        </div>
+
+        <div class="actions">
+          <button class="btn" type="button" id="reset">Clear</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="card" aria-labelledby="outH" aria-live="polite">
+      <h2 id="outH">Screening window</h2>
+      <div id="empty" class="empty">
+        <div class="orb" aria-hidden="true">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </div>
+        <h3>Waiting for details</h3>
+        <p id="emptyMsg">Complete all four fields to see the window.</p>
+      </div>
+      <div id="result" hidden>
+        <div id="banner" class="banner"></div>
+        <div id="figures">
+          <div class="dates">
+            <div class="stat start">
+              <div class="k">Window opens</div>
+              <div class="big" id="sDate">–</div>
+              <div class="sub" id="sSub">–</div>
+            </div>
+            <div class="stat">
+              <div class="k">Window closes</div>
+              <div class="big" id="eDate">–</div>
+              <div class="sub" id="eSub">–</div>
+            </div>
+          </div>
+          <div class="timeline-wrap">
+            <div class="tl-title"><span>Days from birth</span><span id="tlSpan"></span></div>
+            <div class="timeline" aria-hidden="true">
+              <div class="track"><div class="band" id="band"></div></div>
+              <div id="marks" style="position:relative"></div>
+            </div>
+          </div>
+          <div class="explain" id="explain"></div>
+          <div class="copyrow">
+            <button class="btn primary" type="button" id="copy">Copy result</button>
+            <button class="btn" type="button" id="print">Print</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="info">
+    <details>
+      <summary>How is the window calculated?</summary>
+      <div>
+        <p>The calculator works out how many days after birth a baby reaches <b>31 weeks</b> or <b>36 weeks</b> postmenstrual age (PMA), compares that with a minimum of <b>28 days</b> of age, then picks the figure that applies to the baby. The window runs for 7 days (start day to start day + 6).</p>
+        <table class="rules">
+          <tr><th>Baby</th><th>Window starts</th></tr>
+          <tr><td>Born at under 32 weeks</td><td>Whichever is later: 31+0 weeks PMA or 28 days of age</td></tr>
+          <tr><td>Born at 32 weeks or more, birthweight ≤ 1500 g</td><td>Whichever is earlier: 36+0 weeks PMA or 28 days of age (not before birth)</td></tr>
+          <tr><td>Born at 32 weeks or more, birthweight &gt; 1500 g</td><td>Not eligible</td></tr>
+        </table>
+        <p>Screening eligibility: infants born under 31 weeks (up to 30+6) <b>or</b> weighing 1500 g or less (below 1501 g) should be examined. Infants born at 31+0 to 31+6 weeks with a birthweight above 1500 g should be considered for examination.</p>
+      </div>
+    </details>
+    <details>
+      <summary>About this tool</summary>
+      <div>
+        <p>This is a web version of the RCPCH <i>ROP Screening Window Calculator</i> (version 3.2, October 2024), which implements the revised 2024 UK <i>Screening of Retinopathy of Prematurity (ROP)</i> clinical guideline. The calculation is identical to the spreadsheet.</p>
+        <p>Guideline: <a href="https://www.rcpch.ac.uk/resources/screening-retinopathy-prematurity-rop-clinical-guideline" target="_blank" rel="noopener">rcpch.ac.uk – Screening of retinopathy of prematurity clinical guideline</a>.</p>
+        <p>Nothing you enter leaves your device. Feedback on the original calculator: <a href="mailto:guidelines@rcpch.ac.uk">guidelines@rcpch.ac.uk</a>.</p>
+      </div>
+    </details>
+  </div>
+
+  <p class="disclaimer"><b>Disclaimer.</b> Results are indicative only and must never be used in place of, or in opposition to, guidance from qualified medical professionals. This web version is not an official RCPCH product; always refer to the current guideline.</p>
+  <footer><span>Based on the RCPCH ROP Screening Window Calculator v3.2 (Oct 2024)</span></footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script src="rop.js"></script>
+<script>
+(function () {
+  var $ = function (id) { return document.getElementById(id); };
+  var weeksEl = $('weeks'), daysEl = $('days'), bwEl = $('bw'), dobEl = $('dob');
+  var lastText = '';
+
+  for (var w = 22; w <= 42; w++) weeksEl.add(new Option(w + ' weeks', w));
+  for (var d = 0; d <= 6; d++) daysEl.add(new Option(d + (d === 1 ? ' day' : ' days'), d));
+
+  // theme
+  var root = document.documentElement;
+  try { var t = localStorage.getItem('rop-theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+  $('themeBtn').addEventListener('click', function () {
+    var dark = root.getAttribute('data-theme') === 'dark' ||
+      (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    var next = dark ? 'light' : 'dark';
+    root.setAttribute('data-theme', next);
+    try { localStorage.setItem('rop-theme', next); } catch (e) {}
+  });
+
+  var fmt = new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' });
+  var fmtShort = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+
+  var ICONS = {
+    examine: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.7 2.7L16 9.5"/></svg>',
+    consider: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></svg>',
+    'not-eligible': '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v5M12 16.5h.01"/></svg>'
+  };
+  var MESSAGES = {
+    examine: ['Screening required',
+      'All infants less than 31 weeks’ gestational age (up to and including 30 weeks and 6 days) OR less than 1501 g birth weight should be examined to screen for the presence of ROP.'],
+    consider: ['Consider screening',
+      'Infants born between 31+0 weeks’ and 31+6 weeks’ gestational age should be considered for examination.'],
+    'not-eligible': ['Not eligible for ROP screening',
+      'Born at 32 weeks or more with a birthweight above 1500 g, so outside the screening criteria.']
+  };
+
+  function setErr(inputEl, errEl, msg) {
+    errEl.textContent = msg || '';
+    if (inputEl) inputEl.classList.toggle('invalid', !!msg);
+  }
+
+  function show(which) {
+    $('empty').hidden = which !== 'empty';
+    $('result').hidden = which !== 'result';
+  }
+
+  function update() {
+    var wv = weeksEl.value, dv = daysEl.value, bv = bwEl.value.trim(), dobv = dobEl.value;
+    var dob = ROP.parseISODate(dobv);
+
+    var bw = bv === '' ? NaN : Number(bv);
+    var bwBad = bv !== '' && (!Number.isInteger(bw) || bw < 300 || bw > 3500);
+    setErr(bwEl, $('bwErr'), bwBad ? 'Birthweight must be a whole number between 300 and 3500 g.' : '');
+    var dobBad = dobv !== '' && (!dob || dob.getUTCFullYear() < 1900);
+    setErr(dobEl, $('dobErr'), dobBad ? 'Enter a valid date of birth.' : '');
+    setErr(null, $('gaErr'), '');
+
+    var missing = [];
+    if (wv === '') missing.push('gestational weeks');
+    if (dv === '') missing.push('gestational days');
+    if (bv === '') missing.push('birthweight');
+    if (dobv === '') missing.push('date of birth');
+
+    if (missing.length || bwBad || dobBad) {
+      $('emptyMsg').textContent = (bwBad || dobBad)
+        ? 'Please correct the highlighted field.'
+        : 'Still needed: ' + missing.join(', ') + '.';
+      show('empty'); lastText = '';
+      return;
+    }
+
+    var r = ROP.calculate(+wv, +dv, bw, dob);
+    var msg = MESSAGES[r.status];
+    var banner = $('banner');
+    banner.className = 'banner ' + r.status;
+    banner.innerHTML = ICONS[r.status] + '<div><b></b><p></p></div>';
+    banner.querySelector('b').textContent = msg[0];
+    banner.querySelector('p').textContent = msg[1];
+
+    var ga = wv + '+' + dv + ' weeks, ' + bw + ' g';
+    if (r.startDay === null) {
+      $('figures').hidden = true;
+      lastText = 'ROP screening: not eligible (' + ga + ').';
+      show('result');
+      return;
+    }
+    $('figures').hidden = false;
+
+    $('sDate').textContent = fmt.format(r.startDate);
+    $('eDate').textContent = fmt.format(r.endDate);
+    $('sSub').textContent = 'Day ' + r.startDay + ' of life · PMA ' + ROP.formatPMA(r.gaDays + r.startDay);
+    $('eSub').textContent = 'Day ' + r.endDay + ' of life · PMA ' + ROP.formatPMA(r.gaDays + r.endDay);
+    $('tlSpan').textContent = 'Days ' + r.startDay + '–' + r.endDay;
+
+    // timeline scale: 0 .. at least 70 days, always leaving room after the window
+    var max = Math.max(70, Math.ceil((r.endDay + 7) / 7) * 7);
+    var left = r.startDay / max * 100, width = (r.endDay - r.startDay + 1) / max * 100;
+    $('band').style.left = left + '%';
+    $('band').style.width = width + '%';
+    var marks = [0, 28, 56, 84, 112].filter(function (m) { return m <= max; });
+    $('marks').innerHTML = marks.map(function (m, i) {
+      return '<span class="mark' + (i === 0 ? ' first' : '') + '" style="left:' + (m / max * 100) + '%">' + (m === 0 ? 'Birth' : m) + '</span>';
+    }).join('');
+
+    var why;
+    if (+wv < 32) {
+      why = r.startDay > 28
+        ? 'Born at ' + wv + '+' + dv + ', the baby reaches <b>31+0 weeks PMA</b> at day ' + (217 - r.gaDays) + ', which is after the 28-day minimum, so the window opens on day ' + r.startDay + '.'
+        : 'The baby reaches 31+0 weeks PMA on or before day 28, so the <b>28-day minimum</b> applies and the window opens on day 28.';
+    } else {
+      why = r.startDay === 28
+        ? 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, <b>36+0 weeks PMA</b> is at least 28 days away, so the window opens on day 28.'
+        : r.startDay === 0
+          ? 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, the baby is already at or beyond 36+0 weeks PMA, so the window opens at birth (day 0).'
+          : 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, the baby reaches <b>36+0 weeks PMA</b> at day ' + r.startDay + ', before the 28-day mark, so the window opens then.';
+    }
+    $('explain').innerHTML = why;
+
+    lastText = 'ROP screening window (' + ga + ', born ' + fmt.format(dob) + '): ' +
+      fmt.format(r.startDate) + ' to ' + fmt.format(r.endDate) +
+      ' (days ' + r.startDay + '–' + r.endDay + ' of life). ' + msg[0] + '.';
+    show('result');
+  }
+
+  [weeksEl, daysEl, bwEl, dobEl].forEach(function (el) {
+    el.addEventListener('input', update);
+    el.addEventListener('change', update);
+  });
+  $('reset').addEventListener('click', function () {
+    weeksEl.value = ''; daysEl.value = ''; bwEl.value = ''; dobEl.value = '';
+    update(); weeksEl.focus();
+  });
+  $('print').addEventListener('click', function () { window.print(); });
+
+  var toastTimer;
+  function toast(m) {
+    var t = $('toast'); t.textContent = m; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 1800);
+  }
+  $('copy').addEventListener('click', function () {
+    if (!lastText) return;
+    var done = function () { toast('Copied to clipboard'); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(lastText).then(done, function () { fallback(); });
+    } else fallback();
+    function fallback() {
+      var ta = document.createElement('textarea'); ta.value = lastText; document.body.appendChild(ta);
+      ta.select(); try { document.execCommand('copy'); done(); } catch (e) { toast('Copy not available'); }
+      document.body.removeChild(ta);
+    }
+  });
+
+  update();
+})();
+</script>
+</body>
+</html>
