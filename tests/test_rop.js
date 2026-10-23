@@ -24,5 +24,5 @@ assert.strictEqual(r.startDay, 28); // 31+0 reached on day 21, so the 28-day min
 assert.strictEqual(r.startDate.toISOString().slice(0, 10), '2024-03-26');
 assert.strictEqual(r.endDate.toISOString().slice(0, 10), '2024-04-01');
 assert.strictEqual(ROP.parseISODate('2024-02-30'), null);
-assert.strictEqual(ROP.formatPMA(217), '31+0');
+assert.strictEqual(ROP.formatCGA(217), '31+0');
 console.log(`ok - ${n} spreadsheet cases + date checks`);

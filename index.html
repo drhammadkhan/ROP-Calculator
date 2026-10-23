@@ -324,11 +324,11 @@
     <details>
       <summary>How is the window calculated?</summary>
       <div>
-        <p>The calculator works out how many days after birth a baby reaches <b>31 weeks</b> or <b>36 weeks</b> postmenstrual age (PMA), compares that with <b>28 days after birth</b>, then selects the later or earlier point according to the rules below. Birth is day 0. The window runs for 7 days (start day to start day + 6).</p>
+        <p>The calculator works out how many days after birth a baby reaches <b>31 weeks</b> or <b>36 weeks</b> corrected gestational age (CGA), compares that with <b>28 days after birth</b>, then selects the later or earlier point according to the rules below. Birth is day 0. The window runs for 7 days (start day to start day + 6).</p>
         <table class="rules">
           <tr><th>Baby</th><th>Window starts</th></tr>
-          <tr><td>Born at under 32 weeks</td><td>Whichever is later: 31+0 weeks PMA or 28 days after birth</td></tr>
-          <tr><td>Born at 32 weeks or more, birthweight ≤ 1500 g</td><td>Whichever is earlier: 36+0 weeks PMA or 28 days after birth (never before birth)</td></tr>
+          <tr><td>Born at under 32 weeks</td><td>Whichever is later: 31+0 weeks CGA or 28 days after birth</td></tr>
+          <tr><td>Born at 32 weeks or more, birthweight ≤ 1500 g</td><td>Whichever is earlier: 36+0 weeks CGA or 28 days after birth (never before birth)</td></tr>
           <tr><td>Born at 32 weeks or more, birthweight &gt; 1500 g</td><td>Not eligible</td></tr>
         </table>
         <p>Screening eligibility: infants born under 31 weeks (up to 30+6) <b>or</b> weighing 1500 g or less (below 1501 g) should be examined. Infants born at 31+0 to 31+6 weeks with a birthweight above 1500 g should be considered for examination.</p>
@@ -468,8 +468,8 @@
 
     $('sDate').textContent = fmt.format(r.startDate);
     $('eDate').textContent = fmt.format(r.endDate);
-    $('sSub').textContent = r.startDay + (r.startDay === 1 ? ' day' : ' days') + ' after birth · PMA ' + ROP.formatPMA(r.gaDays + r.startDay);
-    $('eSub').textContent = r.endDay + (r.endDay === 1 ? ' day' : ' days') + ' after birth · PMA ' + ROP.formatPMA(r.gaDays + r.endDay);
+    $('sSub').textContent = r.startDay + (r.startDay === 1 ? ' day' : ' days') + ' after birth · CGA ' + ROP.formatCGA(r.gaDays + r.startDay);
+    $('eSub').textContent = r.endDay + (r.endDay === 1 ? ' day' : ' days') + ' after birth · CGA ' + ROP.formatCGA(r.gaDays + r.endDay);
     $('tlSpan').textContent = 'Days ' + r.startDay + '–' + r.endDay;
 
     // timeline scale: 0 .. at least 70 days, always leaving room after the window
@@ -485,14 +485,14 @@
     var why;
     if (+wv < 32) {
       why = r.startDay > 28
-        ? 'Born at ' + wv + '+' + dv + ', the baby reaches <b>31+0 weeks PMA</b> at day ' + (217 - r.gaDays) + ', which is after the 28-day minimum, so the window opens on day ' + r.startDay + '.'
-        : 'The baby reaches 31+0 weeks PMA on or before day 28, so the <b>28-day minimum</b> applies and the window opens on day 28.';
+        ? 'Born at ' + wv + '+' + dv + ', the baby reaches <b>31+0 weeks CGA</b> at day ' + (217 - r.gaDays) + ', which is after the 28-day minimum, so the window opens on day ' + r.startDay + '.'
+        : 'The baby reaches 31+0 weeks CGA on or before day 28, so the <b>28-day minimum</b> applies and the window opens on day 28.';
     } else {
       why = r.startDay === 28
-        ? 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, <b>36+0 weeks PMA</b> is at least 28 days away, so the window opens on day 28.'
+        ? 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, <b>36+0 weeks CGA</b> is at least 28 days away, so the window opens on day 28.'
         : r.startDay === 0
-          ? 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, the baby is already at or beyond 36+0 weeks PMA, so the window opens at birth (day 0).'
-          : 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, the baby reaches <b>36+0 weeks PMA</b> at day ' + r.startDay + ', before the 28-day mark, so the window opens then.';
+          ? 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, the baby is already at or beyond 36+0 weeks CGA, so the window opens at birth (day 0).'
+          : 'Born at ' + wv + '+' + dv + ' weighing ≤ 1500 g, the baby reaches <b>36+0 weeks CGA</b> at day ' + r.startDay + ', before the 28-day mark, so the window opens then.';
     }
     $('explain').innerHTML = why;
 
