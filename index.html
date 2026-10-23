@@ -6,7 +6,7 @@
 <title>ROP Screening Window Calculator | Evelina Neonatal Data Group</title>
 <meta name="description" content="Evelina Neonatal Data Group tool: calculate the retinopathy of prematurity (ROP) screening window for a preterm baby, based on the RCPCH 2024 UK clinical guideline.">
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3eee4">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#15130f">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1b2227">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://drhammadkhan.github.io/ROP-Calculator/">
 <meta property="og:title" content="ROP Screening Window Calculator | Evelina Neonatal Data Group">
@@ -25,25 +25,25 @@
     --hot: #dd4027; --hot-ink: #b3301a; --hotbg: #f9ddd4;
     --cool: #1d5e57; --coolbg: #d9e8e2;
     --amber: #c5a56e; --amber-ink: #7a5a12; --amberbg: #f3e7cb;
-    --field: #fbf8f1;
+    --field: #fbf8f1; --on-hot: #fff; --danger: #dd4027; --danger-ink: #b3301a; --dangerbg: #f9ddd4;
     --serif: "Fraunces", Georgia, "Times New Roman", serif; --mono: "DM Mono", ui-monospace, Menlo, monospace;
     --ease-out: cubic-bezier(.23, 1, .32, 1);
     --arrow: #8a8174;
   }
   :root[data-theme="dark"] {
-    --paper: #15130f; --paper2: #1d1a15; --ink: #f1ebdd; --mute: #9b9384; --line: #363126;
-    --hot: #ff7a5c; --hot-ink: #ff7a5c; --hotbg: #3a1c14;
-    --cool: #6fd0c2; --coolbg: #13302c;
-    --amber: #e0b866; --amber-ink: #e0b866; --amberbg: #33290f;
-    --field: #110f0c;
+    --paper: #1b2227; --paper2: #252c31; --ink: #f0deb9; --mute: #aba597; --line: #41474c;
+    --hot: #c78b4c; --hot-ink: #d4a677; --hotbg: #3b3227;
+    --cool: #a9ac8f; --coolbg: #2b322c;
+    --amber: #ddb785; --amber-ink: #dbb481; --amberbg: #403d34;
+    --field: #13181c; --on-hot: #1b2227; --danger: #cb6951; --danger-ink: #d99786; --dangerbg: #3c2a28;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #15130f; --paper2: #1d1a15; --ink: #f1ebdd; --mute: #9b9384; --line: #363126;
-      --hot: #ff7a5c; --hot-ink: #ff7a5c; --hotbg: #3a1c14;
-      --cool: #6fd0c2; --coolbg: #13302c;
-      --amber: #e0b866; --amber-ink: #e0b866; --amberbg: #33290f;
-      --field: #110f0c;
+      --paper: #1b2227; --paper2: #252c31; --ink: #f0deb9; --mute: #aba597; --line: #41474c;
+      --hot: #c78b4c; --hot-ink: #d4a677; --hotbg: #3b3227;
+      --cool: #a9ac8f; --coolbg: #2b322c;
+      --amber: #ddb785; --amber-ink: #dbb481; --amberbg: #403d34;
+      --field: #13181c; --on-hot: #1b2227; --danger: #cb6951; --danger-ink: #d99786; --dangerbg: #3c2a28;
     }
   }
 
@@ -114,8 +114,8 @@
   .unit { position: relative; }
   .unit input { padding-right: 52px; }
   .unit span { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: var(--mute); font: 400 .85rem var(--mono); pointer-events: none; }
-  .invalid { border-color: var(--hot) !important; background: var(--hotbg) !important; }
-  .err { color: var(--hot-ink); font-size: .9rem; margin-top: 6px; min-height: 0; }
+  .invalid { border-color: var(--danger) !important; background: var(--dangerbg) !important; }
+  .err { color: var(--danger-ink); font-size: .9rem; margin-top: 6px; min-height: 0; }
   .err:empty { display: none; }
   .note { margin-top: 8px; padding: 8px 12px; border-radius: 3px; border: 1px solid var(--line); border-left: 5px solid var(--amber); background: var(--amberbg); color: var(--ink); font-size: .95rem; }
   .note[hidden] { display: none; }
@@ -136,7 +136,7 @@
   .icon-btn:active, button.btn:active { transform: scale(.97); }
   @media (hover: hover) and (pointer: fine) {
     .icon-btn:hover, button.btn:hover { background: var(--ink); color: var(--paper); border-color: var(--ink); }
-    button.btn.primary:hover { background: var(--hot-ink); border-color: var(--hot-ink); color: #fff; }
+    button.btn.primary:hover { background: var(--hot-ink); border-color: var(--hot-ink); color: var(--on-hot); }
   }
   button.btn.primary { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   button.btn:disabled { opacity: .45; cursor: not-allowed; }
@@ -204,7 +204,7 @@
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   @media print {
-    :root, :root[data-theme="dark"] { --paper: #fff; --paper2: #fff; --ink: #111; --mute: #555; --line: #ccc; --hot: #c2321a; --hot-ink: #c2321a; --hotbg: #fff; --cool: #1d5e57; --amberbg: #fff; --field: #fff; }
+    :root, :root[data-theme="dark"] { --paper: #fff; --paper2: #fff; --ink: #111; --mute: #555; --line: #ccc; --hot: #c2321a; --hot-ink: #c2321a; --hotbg: #fff; --danger: #c2321a; --danger-ink: #c2321a; --dangerbg: #fff; --cool: #1d5e57; --amberbg: #fff; --field: #fff; }
     body { background: #fff; color: #000; font-size: 13px; }
     body::before { display: none; }
     .icon-btn, .actions, .copyrow, .info, .toast { display: none !important; }
@@ -364,7 +364,7 @@
 
   // theme
   var root = document.documentElement;
-  var CHROME = { light: '#f3eee4', dark: '#15130f' };
+  var CHROME = { light: '#f3eee4', dark: '#1b2227' };
   function setChrome(theme) {
     Array.prototype.forEach.call(document.querySelectorAll('meta[name="theme-color"]'), function (m) {
       m.removeAttribute('media'); m.content = CHROME[theme];
