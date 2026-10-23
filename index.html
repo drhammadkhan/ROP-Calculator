@@ -436,7 +436,12 @@
     var bw = bv === '' ? NaN : Number(bv);
     var bwBad = bv !== '' && (!Number.isInteger(bw) || bw < 300 || bw > 3500);
     setErr(bwEl, $('bwErr'), bwBad ? 'Birthweight must be a whole number between 300 and 3500 g.' : '');
-    var dobBad = dobv !== '' && (!dob || dob.getUTCFullYear() < 1900);
+    // Chrome treats a typed date as valid after the first year digit (year 0002). While the field has focus,
+    // an implausibly early year means "still typing the year", not an error; the error shows once focus leaves.
+    // (Years 0-99 do not parse at all, so an unparsed non-empty value counts as too early as well.)
+    var dobEarly = dobv !== '' && (!dob || dob.getUTCFullYear() < 1900);
+    var typingYear = dobEarly && document.activeElement === dobEl;
+    var dobBad = dobEarly && !typingYear;
     setErr(dobEl, $('dobErr'), dobBad ? 'Enter a valid date of birth.' : '');
     setErr(null, $('gaErr'), '');
 
@@ -449,7 +454,7 @@
     if (wv === '') missing.push('gestational weeks');
     if (dv === '') missing.push('gestational days');
     if (bv === '') missing.push('birthweight');
-    if (dobv === '') missing.push('date of birth');
+    if (dobv === '' || typingYear) missing.push('date of birth');
 
     if (missing.length || bwBad || dobBad) {
       $('emptyMsg').textContent = (bwBad || dobBad)
@@ -521,6 +526,7 @@
     el.addEventListener('input', update);
     el.addEventListener('change', update);
   });
+  dobEl.addEventListener('blur', update); // an early year left in the field now shows its error
   $('reset').addEventListener('click', function () {
     weeksEl.value = ''; daysEl.value = ''; bwEl.value = ''; dobEl.value = '';
     update(); weeksEl.focus();
