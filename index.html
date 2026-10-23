@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ROP Screening Window Calculator</title>
 <meta name="description" content="Calculate the retinopathy of prematurity (ROP) screening window for a preterm baby, based on the RCPCH 2024 UK clinical guideline.">
-<meta name="theme-color" content="#0f766e">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#f3f7f8">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0c1519">
 <link rel="icon" href="favicon.svg" type="image/svg+xml">
 <style>
   :root {
@@ -52,7 +53,10 @@
   }
 
   * { box-sizing: border-box; }
-  html { -webkit-text-size-adjust: 100%; }
+  html { -webkit-text-size-adjust: 100%; -webkit-tap-highlight-color: transparent; }
+  button, summary, a { touch-action: manipulation; }
+  button, summary { user-select: none; -webkit-user-select: none; }
+  .sr-only { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
   body {
     margin: 0; color: var(--ink); background: var(--bg);
     background-image:
@@ -76,8 +80,12 @@
   .icon-btn {
     border: 1px solid var(--line); background: var(--surface); color: var(--ink); width: 40px; height: 40px;
     border-radius: 12px; cursor: pointer; display: grid; place-items: center; flex: none;
+    transition: transform 100ms cubic-bezier(.23, 1, .32, 1), border-color .15s;
   }
-  .icon-btn:hover { border-color: var(--brand); }
+  .icon-btn:active, button.btn:active { transform: scale(.97); }
+  @media (hover: hover) and (pointer: fine) {
+    .icon-btn:hover, button.btn:hover { border-color: var(--brand); }
+  }
 
   h1 { font-size: clamp(28px, 5vw, 44px); line-height: 1.1; letter-spacing: -.02em; margin: 6px 0 10px; }
   .lede { color: var(--ink-2); max-width: 62ch; margin: 0 0 26px; font-size: 17px; }
@@ -114,13 +122,22 @@
   .invalid { border-color: var(--err) !important; }
   .err { color: var(--err); font-size: 13px; margin-top: 6px; min-height: 0; }
   .err:empty { display: none; }
+  .note { margin-top: 8px; padding: 8px 12px; border-radius: 10px; border: 1px solid var(--warn-line); background: var(--warn-bg); color: var(--warn-ink); font-size: 13.5px; }
+  .note[hidden] { display: none; }
+  .banner + .note { margin: -8px 0 20px; }
+
+  @media (max-width: 360px) {
+    .card { padding: 16px; }
+    .row { gap: 8px; }
+    select { padding-left: 10px; padding-right: 30px; background-position: right 10px center; }
+  }
 
   .actions { display: flex; gap: 10px; margin-top: 22px; flex-wrap: wrap; }
   button.btn {
     font: inherit; font-weight: 600; font-size: 14.5px; height: 44px; padding: 0 18px; border-radius: 12px; cursor: pointer;
     border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+    transition: transform 100ms cubic-bezier(.23, 1, .32, 1), border-color .15s;
   }
-  button.btn:hover { border-color: var(--brand); }
   button.btn.primary { background: var(--brand); color: var(--brand-ink); border-color: var(--brand); }
   button.btn:disabled { opacity: .45; cursor: not-allowed; }
   button:focus-visible, summary:focus-visible, a:focus-visible { outline: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); outline-offset: 2px; }
@@ -139,8 +156,7 @@
   .empty h3 { margin: 0 0 4px; color: var(--ink); font-size: 18px; }
   .empty p { margin: 0; }
 
-  .dates { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 18px; }
-  @media (max-width: 480px) { .dates { grid-template-columns: 1fr; } }
+  .dates { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr)); gap: 12px; margin-bottom: 18px; }
   .stat { background: var(--surface-2); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
   .stat .k { font-size: 12.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); font-weight: 700; }
   .stat .big { font-size: 22px; font-weight: 750; letter-spacing: -.01em; margin: 2px 0; line-height: 1.25; }
@@ -149,7 +165,7 @@
 
   .timeline { margin: 6px 0 4px; }
   .track { position: relative; height: 14px; border-radius: 999px; background: var(--surface-2); border: 1px solid var(--line); }
-  .band { position: absolute; top: -1px; bottom: -1px; border-radius: 999px; background: linear-gradient(90deg, var(--brand), var(--accent)); box-shadow: 0 4px 14px -4px var(--brand); transition: left .35s ease, width .35s ease; min-width: 10px; }
+  .band { position: absolute; top: -1px; bottom: -1px; border-radius: 999px; background: linear-gradient(90deg, var(--brand), var(--accent)); box-shadow: 0 4px 14px -4px var(--brand); transition: left 250ms cubic-bezier(.23, 1, .32, 1), width 250ms cubic-bezier(.23, 1, .32, 1); min-width: 10px; }
   .mark { position: absolute; top: 20px; transform: translateX(-50%); font-size: 12px; color: var(--ink-2); white-space: nowrap; }
   .mark::before { content: ""; position: absolute; left: 50%; top: -9px; height: 6px; width: 1px; background: var(--line); }
   .mark.first { transform: none; } .mark.first::before { left: 0; }
@@ -180,7 +196,7 @@
   .disclaimer { margin-top: 22px; font-size: 13.5px; color: var(--ink-2); border-left: 3px solid var(--warn-line); padding: 4px 0 4px 14px; }
   footer { margin-top: 26px; font-size: 13px; color: var(--ink-2); display: flex; flex-wrap: wrap; gap: 6px 18px; }
 
-  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; transition: .25s; pointer-events: none; z-index: 5; }
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--bg); padding: 10px 16px; border-radius: 999px; font-size: 14px; transition: opacity 200ms cubic-bezier(.23, 1, .32, 1), transform 200ms cubic-bezier(.23, 1, .32, 1); pointer-events: none; z-index: 5; }
   .toast.show { opacity: 1; transform: translate(-50%, 0); }
 
   @media print {
@@ -189,7 +205,13 @@
     .card { box-shadow: none; }
     .grid { grid-template-columns: 1fr 1fr; }
   }
-  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+  /* reduced motion: drop movement, keep opacity and colour feedback */
+  @media (prefers-reduced-motion: reduce) {
+    .band { transition: none; }
+    .toast { transform: translate(-50%, 0); transition: opacity 150ms; }
+    .icon-btn, button.btn { transition: border-color .15s; }
+    .icon-btn:active, button.btn:active { transform: none; }
+  }
 </style>
 </head>
 <body>
@@ -233,7 +255,7 @@
         <div class="field">
           <label for="bw">Birthweight <span class="hint">(300–3500 g)</span></label>
           <div class="unit">
-            <input id="bw" type="number" inputmode="numeric" min="300" max="3500" step="1" placeholder="e.g. 1250">
+            <input id="bw" type="number" inputmode="numeric" enterkeyhint="done" min="300" max="3500" step="1" placeholder="e.g. 1250">
             <span>g</span>
           </div>
           <div class="err" id="bwErr" role="alert"></div>
@@ -243,6 +265,7 @@
           <label for="dob">Date of birth</label>
           <input id="dob" type="date" min="1900-01-02">
           <div class="err" id="dobErr" role="alert"></div>
+          <div class="note" id="dobNote" hidden></div>
         </div>
 
         <div class="actions">
@@ -251,7 +274,8 @@
       </form>
     </section>
 
-    <section class="card" aria-labelledby="outH" aria-live="polite">
+    <section class="card" aria-labelledby="outH">
+      <div class="sr-only" id="live" role="status" aria-live="polite"></div>
       <h2 id="outH">Screening window</h2>
       <div id="empty" class="empty">
         <div class="orb" aria-hidden="true">
@@ -262,6 +286,7 @@
       </div>
       <div id="result" hidden>
         <div id="banner" class="banner"></div>
+        <div class="note" id="timingNote" hidden></div>
         <div id="figures">
           <div class="dates">
             <div class="stat start">
@@ -333,12 +358,19 @@
 
   // theme
   var root = document.documentElement;
-  try { var t = localStorage.getItem('rop-theme'); if (t) root.setAttribute('data-theme', t); } catch (e) {}
+  var CHROME = { light: '#f3f7f8', dark: '#0c1519' };
+  function setChrome(theme) {
+    Array.prototype.forEach.call(document.querySelectorAll('meta[name="theme-color"]'), function (m) {
+      m.removeAttribute('media'); m.content = CHROME[theme];
+    });
+  }
+  try { var t = localStorage.getItem('rop-theme'); if (t === 'light' || t === 'dark') { root.setAttribute('data-theme', t); setChrome(t); } } catch (e) {}
   $('themeBtn').addEventListener('click', function () {
     var dark = root.getAttribute('data-theme') === 'dark' ||
       (!root.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
     var next = dark ? 'light' : 'dark';
     root.setAttribute('data-theme', next);
+    setChrome(next);
     try { localStorage.setItem('rop-theme', next); } catch (e) {}
   });
 
@@ -364,6 +396,13 @@
     if (inputEl) inputEl.classList.toggle('invalid', !!msg);
   }
 
+  // announce results to screen readers only when they actually change, not on every keystroke
+  var lastAnnounced = '';
+  function announce(text) {
+    if (text === lastAnnounced) return;
+    lastAnnounced = text; $('live').textContent = text;
+  }
+
   function show(which) {
     $('empty').hidden = which !== 'empty';
     $('result').hidden = which !== 'result';
@@ -380,6 +419,11 @@
     setErr(dobEl, $('dobErr'), dobBad ? 'Enter a valid date of birth.' : '');
     setErr(null, $('gaErr'), '');
 
+    var now = new Date(), todayUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+    var future = !!dob && !dobBad && dob.getTime() > todayUTC;
+    $('dobNote').hidden = !future;
+    $('dobNote').textContent = future ? 'This date is in the future. Check the year.' : '';
+
     var missing = [];
     if (wv === '') missing.push('gestational weeks');
     if (dv === '') missing.push('gestational days');
@@ -390,7 +434,7 @@
       $('emptyMsg').textContent = (bwBad || dobBad)
         ? 'Please correct the highlighted field.'
         : 'Still needed: ' + missing.join(', ') + '.';
-      show('empty'); lastText = '';
+      show('empty'); lastText = ''; lastAnnounced = '';
       return;
     }
 
@@ -406,10 +450,15 @@
     if (r.startDay === null) {
       $('figures').hidden = true;
       lastText = 'ROP screening: not eligible (' + ga + ').';
-      show('result');
+      $('timingNote').hidden = true;
+      show('result'); announce(lastText);
       return;
     }
     $('figures').hidden = false;
+
+    var passed = r.endDate.getTime() < todayUTC;
+    $('timingNote').hidden = !passed;
+    $('timingNote').textContent = passed ? 'This window has already passed. Check the date of birth.' : '';
 
     $('sDate').textContent = fmt.format(r.startDate);
     $('eDate').textContent = fmt.format(r.endDate);
@@ -444,7 +493,7 @@
     lastText = 'ROP screening window (' + ga + ', born ' + fmt.format(dob) + '): ' +
       fmt.format(r.startDate) + ' to ' + fmt.format(r.endDate) +
       ' (days ' + r.startDay + '–' + r.endDay + ' after birth). ' + msg[0] + '.';
-    show('result');
+    show('result'); announce(lastText);
   }
 
   [weeksEl, daysEl, bwEl, dobEl].forEach(function (el) {
