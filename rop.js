@@ -7,8 +7,8 @@
   'use strict';
 
   var DAY_MS = 86400000;
-  var PMA_31_WEEKS = 217; // 31+0 weeks in days
-  var PMA_36_WEEKS = 252; // 36+0 weeks in days
+  var CGA_31_WEEKS = 217; // 31+0 weeks in days
+  var CGA_36_WEEKS = 252; // 36+0 weeks in days
   var MIN_START = 28;     // comparison point: minimum for GA <32 weeks; cap for GA >=32 weeks
 
   /** Returns { status, message, startDay, endDay, startDate, endDate, gaDays }.
@@ -18,9 +18,9 @@
     var startDay;
 
     if (weeks < 32) {
-      startDay = Math.max(PMA_31_WEEKS - gaDays, MIN_START);
+      startDay = Math.max(CGA_31_WEEKS - gaDays, MIN_START);
     } else if (birthweight <= 1500) {
-      startDay = Math.max(Math.min(PMA_36_WEEKS - gaDays, MIN_START), 0);
+      startDay = Math.max(Math.min(CGA_36_WEEKS - gaDays, MIN_START), 0);
     } else {
       startDay = null;
     }
@@ -58,12 +58,12 @@
     return d;
   }
 
-  /** PMA in "weeks+days" for a given gestational age in days. */
-  function formatPMA(totalDays) {
+  /** CGA in "weeks+days" for a given gestational age in days. */
+  function formatCGA(totalDays) {
     return Math.floor(totalDays / 7) + '+' + (totalDays % 7);
   }
 
-  var api = { calculate: calculate, parseISODate: parseISODate, addDays: addDays, formatPMA: formatPMA };
+  var api = { calculate: calculate, parseISODate: parseISODate, addDays: addDays, formatCGA: formatCGA };
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
   else root.ROP = api;
 })(typeof window !== 'undefined' ? window : globalThis);
