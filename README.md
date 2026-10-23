@@ -11,4 +11,4 @@ Static site: no build step, no dependencies, nothing leaves the browser. Open `i
 - `index.html` – the UI
 - `tests/` – `node tests/test_rop.js` checks 1,029 cases against the original spreadsheet formulas recalculated in LibreOffice
 
-**Disclaimer:** results are indicative only and must not replace guidance from qualified medical professionals. Not an official RCPCH product.
+**Intended purpose:** calculates the dates of the screening window from the dates and gestational age entered, following the RCPCH guideline, for reference. The clinician decides when to screen. Results are indicative only and must not replace guidance from qualified medical professionals. Not an official RCPCH product.
