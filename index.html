@@ -230,6 +230,12 @@
   .notice strong { font-weight: 700; }
   footer { margin-top: 26px; padding-top: 16px; border-top: 1px solid var(--line); font: 400 .72rem/1.6 var(--mono); color: var(--mute); }
   footer p { margin: 0 0 6px; }
+  .crumb { margin: 0 0 10px; }
+  .crumb a { font: 500 .72rem/1 var(--mono); letter-spacing: .12em; text-transform: uppercase; color: var(--mute); text-decoration: none; display: inline-flex; align-items: center; gap: 6px; padding: 7px 0; }
+  @media (hover: hover) and (pointer: fine) { .crumb a:hover { color: var(--ink); text-decoration: underline; text-underline-offset: 4px; } }
+  .crumb a:focus-visible { outline: 2px solid var(--hot); outline-offset: 2px; }
+  .back { margin: 14px 0 0; font: 500 .72rem/1.4 var(--mono); letter-spacing: .12em; text-transform: uppercase; }
+  .back a { color: var(--ink); text-underline-offset: 4px; }
   footer .credit { margin: 14px 0 0; font: italic 400 .9rem/1.4 var(--serif); color: var(--ink); }
 
   .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0; background: var(--ink); color: var(--paper); padding: 10px 16px; border-radius: 999px; font: 400 .85rem var(--mono); transition: opacity 200ms var(--ease-out), transform 200ms var(--ease-out); pointer-events: none; z-index: 5; }
@@ -239,7 +245,7 @@
     :root, :root[data-theme="dark"] { --paper: #fff; --paper2: #fff; --ink: #111; --mute: #555; --line: #ccc; --hot: #c2321a; --hot-ink: #c2321a; --hotbg: #fff; --danger: #c2321a; --danger-ink: #c2321a; --dangerbg: #fff; --cool: #1d5e57; --amberbg: #fff; --field: #fff; }
     body { background: #fff; color: #000; font-size: 13px; }
     body::before { display: none; }
-    .icon-btn, .actions, .copyrow, .info, .toast { display: none !important; }
+    .icon-btn, .crumb, .back, .actions, .copyrow, .info, .toast { display: none !important; }
     .card { box-shadow: none; break-inside: avoid; }
     .grid { grid-template-columns: 1fr 1fr; }
     .brand::before, .kicker::before, .banner, .band, .notice { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
@@ -255,6 +261,7 @@
 </head>
 <body>
 <div class="wrap">
+  <nav class="crumb" aria-label="Group"><a href="https://drhammadkhan.github.io/evelina-neonatal-data-group/">&larr; All tools</a></nav>
   <header class="top">
     <a class="brand" href="https://drhammadkhan.github.io/evelina-neonatal-data-group/">Evelina Neonatal Data Group</a>
     <button class="icon-btn" id="themeBtn" type="button" aria-label="Toggle light / dark theme" title="Toggle theme">
@@ -380,6 +387,7 @@
   <p class="notice" role="note"><strong>Disclaimer.</strong> Results are indicative only and must never be used in place of, or in opposition to, guidance from qualified medical professionals. This web version is not an official RCPCH product; always refer to the current guideline.</p>
   <footer>
     <p>Based on the RCPCH ROP Screening Window Calculator v3.2 (Oct 2024)</p>
+    <p class="back"><a href="https://drhammadkhan.github.io/evelina-neonatal-data-group/">&larr; All group tools</a></p>
     <p class="credit">A tool from the <a href="https://drhammadkhan.github.io/evelina-neonatal-data-group/">Evelina Neonatal Data Group</a>.<br>Created by Dr Hammad Khan</p>
   </footer>
 </div>
